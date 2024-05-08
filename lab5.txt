@@ -1,0 +1,106 @@
+import Foundation
+
+// Define the Game struct
+struct WordsGame {
+    let categories: [String: [String]] = [
+        "Footballers": ["messi", "ronaldo", "neymar", "mbappe", "lewandowski"],
+        "Games": ["minecraft", "fortnite", "overwatch", "fifa", "zelda"],
+        "Cities": ["gdynia", "gdansk", "warsaw", "poznan", "wroclaw"]
+    ]
+    
+    var currentCategory: String?
+    var currentWord: String?
+    var guessedLetters: Set<Character> = []
+    var maxTries: Int = 6
+    var remainingTries: Int = 6
+    
+    // Function to start the game
+    mutating func startGame(category: String?, level: String?) {
+        guard let category = category, let level = level else {
+            print("Please select both category and difficulty.")
+            return
+        }
+        
+        guard let words = categories[category] else {
+            print("Invalid category")
+            return
+        }
+        
+        // Select a word based on the level
+        switch level {
+        case "easy":
+            self.currentWord = words.randomElement()
+            self.maxTries = 6
+        case "medium":
+            self.currentWord = words.randomElement()
+            self.maxTries = 5
+        case "hard":
+            self.currentWord = words.randomElement()
+            self.maxTries = 4
+        default:
+            print("Invalid level")
+            return
+        }
+        
+        self.remainingTries = self.maxTries
+        self.currentCategory = category
+        self.guessedLetters = []
+        
+        print("Guess the \(category)!")
+        drawBoard()
+        gameLoop()
+    }
+    
+    // Function to draw the game board
+    func drawBoard() {
+        var displayedWord = ""
+        guard let word = currentWord else { return }
+        for letter in word {
+            if guessedLetters.contains(letter) {
+                displayedWord.append(letter)
+            } else if letter == " " {
+                displayedWord.append(" ")
+            } else {
+                displayedWord.append("_")
+            }
+            displayedWord.append(" ")
+        }
+        print(displayedWord)
+    }
+    
+    // Function for the game loop
+    mutating func gameLoop() {
+        while remainingTries > 0 {
+            print("Remaining tries: \(remainingTries)")
+            print("Enter a letter:")
+            if let input = readLine()?.lowercased(), let letter = input.first {
+                if !guessedLetters.contains(letter) {
+                    guessedLetters.insert(letter)
+                    if let word = currentWord {
+                        if !word.contains(letter) {
+                            remainingTries -= 1
+                        }
+                        drawBoard()
+                        if word.filter({ !guessedLetters.contains($0) }).isEmpty {
+                            print("Congratulations! You guessed the word '\(word)' correctly!")
+                            return
+                        }
+                    }
+                } else {
+                    print("You already guessed this letter.")
+                }
+            }
+        }
+        if remainingTries == 0 {
+            print("You ran out of tries! The word was: \(currentWord ?? "")")
+        }
+    }
+}
+
+// Example usage
+var game = WordsGame()
+print("Select Category from: Footballers, Games, Cities")
+let category = readLine()
+print("Select difficulty: easy, medium, hard")
+let level = readLine()
+game.startGame(category: category, level: level)
